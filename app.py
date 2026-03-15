@@ -8,76 +8,84 @@ st.set_page_config(
     layout="wide"
 )
 
-# ======================
-# CSS MODERNO
-# ======================
+# -------------------------
+# CSS PROFISSIONAL
+# -------------------------
 
 st.markdown("""
 <style>
 
+body {
+    font-family: Inter, sans-serif;
+}
+
 .main-title{
-    font-size:32px;
+    font-size:34px;
     font-weight:700;
 }
 
 .subtitle{
-    color:gray;
+    color:#9ca3af;
     margin-bottom:20px;
 }
 
-/* Card estilo SaaS */
+/* CARD INSIGHT */
 
-.card{
-    background-color:rgba(255,255,255,0.04);
+.insight-card{
+    background-color:#111827;
     padding:20px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,0.08);
-}
-
-/* Insight */
-
-.insight{
+    border-radius:10px;
+    border:1px solid #374151;
     font-size:16px;
-    line-height:1.6;
 }
 
-/* Sidebar */
+/* CHAT */
+
+[data-testid="stChatMessage"]{
+    margin-bottom:15px;
+}
+
+/* INPUT */
+
+.stChatInput input{
+    border-radius:12px;
+}
+
+/* SIDEBAR */
 
 .sidebar-title{
     font-size:20px;
     font-weight:600;
 }
 
-/* Botões */
+/* BOTÃO */
 
 .stButton button{
-    border-radius:8px;
-    height:40px;
-}
-
-/* chat spacing */
-
-[data-testid="stChatMessage"]{
-    margin-bottom:15px;
+    border-radius:10px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ======================
+# -------------------------
 # SIDEBAR
-# ======================
+# -------------------------
 
 with st.sidebar:
 
     st.markdown("## 📊 AI Data Analyst")
 
     st.markdown("""
-    **AI Assistant para análise de dados**
+AI assistant para análise de dados.
 
-    Faça perguntas sobre seus dados
-    e receba insights automaticamente.
-    """)
+Pergunte sobre seu dataset e receba:
+
+• insights automáticos  
+• análises rápidas  
+• gráficos instantâneos  
+""")
+
+    st.markdown("---")
 
     if st.button("🧹 Limpar conversa"):
         st.session_state.messages = []
@@ -85,59 +93,41 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.markdown("### Sobre")
+    st.markdown("Dataset ativo:")
 
-    st.markdown("""
-    Projeto de **AI Data Analyst**.
+    st.success("vendas.db")
 
-    Funcionalidades:
+# -------------------------
+# HEADER
+# -------------------------
 
-    • geração automática de SQL  
-    • análise de dados com LLM  
-    • gráficos automáticos  
-    """)
+st.markdown('<div class="main-title">AI Data Analyst</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Pergunte qualquer coisa sobre seus dados</div>', unsafe_allow_html=True)
 
-# ======================
-# MEMÓRIA DO CHAT
-# ======================
+# -------------------------
+# HISTÓRICO CHAT
+# -------------------------
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# ======================
-# HEADER
-# ======================
+for msg in st.session_state.messages:
 
-st.markdown('<div class="main-title">📊 AI Data Analyst</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Pergunte qualquer coisa sobre os dados</div>', unsafe_allow_html=True)
+    with st.chat_message(msg["role"]):
 
-# ======================
-# HISTÓRICO
-# ======================
+        st.markdown(msg["content"])
 
-for message in st.session_state.messages:
+        if msg.get("chart") is not None:
+            st.bar_chart(msg["chart"])
 
-    with st.chat_message(message["role"]):
-
-        st.markdown(message["content"])
-
-        if "chart" in message and message["chart"] is not None:
-
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-
-            st.bar_chart(message["chart"])
-
-            st.markdown('</div>', unsafe_allow_html=True)
-
-# ======================
-# INPUT DO USUÁRIO
-# ======================
+# -------------------------
+# INPUT
+# -------------------------
 
 prompt = st.chat_input("Pergunte algo sobre os dados...")
 
 if prompt:
 
-    # mostrar pergunta
     with st.chat_message("user"):
         st.markdown(prompt)
 
@@ -146,7 +136,6 @@ if prompt:
         "content": prompt
     })
 
-    # resposta do agente
     with st.chat_message("assistant"):
 
         with st.spinner("Analisando dados..."):
@@ -154,13 +143,12 @@ if prompt:
             insight, df = ask_agent(prompt)
 
         st.markdown(
-            f'<div class="card insight">{insight}</div>',
+            f'<div class="insight-card">{insight}</div>',
             unsafe_allow_html=True
         )
 
         chart_data = None
 
-        # gerar gráfico automático
         if isinstance(df, pd.DataFrame) and len(df.columns) >= 2:
 
             numeric_cols = df.select_dtypes(include="number").columns
@@ -172,11 +160,7 @@ if prompt:
 
                 chart_data = df.set_index(x_col)[y_col]
 
-                st.markdown('<div class="card">', unsafe_allow_html=True)
-
                 st.bar_chart(chart_data)
-
-                st.markdown('</div>', unsafe_allow_html=True)
 
     st.session_state.messages.append({
         "role": "assistant",
